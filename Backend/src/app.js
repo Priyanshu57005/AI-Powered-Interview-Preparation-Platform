@@ -13,7 +13,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 const authRouter = require("./routes/auth.routes");
+const intervieRouter = require("./routes/interview.routes")
 
 app.use("/api/auth", authRouter);
+app.use("/api/interview", intervieRouter)
 
 module.exports = app;

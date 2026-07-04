@@ -13,6 +13,18 @@ interviewRouter.post("/", authMiddleware.authUser, upload.single("resume"), inte
 
 
 /**@routes GET /api/interview.report/:interviewId */
+interviewRouter.get("/report/:interviewId", authMiddleware.authUser, interviewController.getInterviewReportByIdController)
+
+
+
+/**@route GET /api/interview/*/
+interviewRouter.get("/", authMiddleware.authUser, interviewController.getAllInterviewReportsController)
+
+
+
+/**@route post /api/interview/resume/pdf */
+interviewRouter.post("/resume/pdf/:interviewReportId", authMiddleware.authUser, interviewController.generateResumePdfController)
+
 
 
 module.exports = interviewRouter

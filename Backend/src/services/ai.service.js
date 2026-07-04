@@ -1,5 +1,5 @@
 const { GoogleGenAI } = require("@google/genai")
-const { z } = require("zod")
+const { z } = require("zod/v3")
 const { zodToJsonSchema } = require("zod-to-json-schema")
 const puppeteer = require("puppeteer")
 
@@ -43,30 +43,33 @@ const interviewReportSchema = z.object({
         focus: z.string().describe("The main focus of this day in the preparation plan, e.g. data structures, system design, mock interviews etc."),
         tasks: z.array(z.string()).describe("List of tasks to be done on this day to follow the preparation plan, e.g. read a specific book or article, solve a set of problems, watch a video etc.")
     })).describe("A day-wise preparation plan for the candidate to follow in order to prepare for the interview effectively"),
-    title: z.string().describe("The title of the job for which the interview report is generated"),
 })
 
 
 
 async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
     const prompt = `Generate an interview report for a candidate with the following details:
-    Resume: ${resume}
-    Self Description: ${selfDescription}
-    Job Description: ${jobDescription}
-`
+Resume: ${resume}
+Self Description: ${selfDescription}
+Job Description: ${jobDescription}
+`;
 
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            //responseSchema: zodToJsonSchema(interviewReportSchema),
-        }
-    })
-    const json = JSON.parse(response.text);
+            responseSchema: zodToJsonSchema(interviewReportSchema),
+        },
+    });
+
+    // Call text() to get the JSON string
+    const responseText = response.text;
 
     console.log("Gemini Response:");
-    console.log(JSON.stringify(json, null, 2));
+    console.log(responseText);
+
+    const json = JSON.parse(responseText);
 
     return json;
 }
@@ -77,11 +80,14 @@ async function generatePdfFormHtml(htmlContent) {
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: "networkidle0" })
     const pdfBuffer = await page.pdf({
-        format: "A4", margin: {
-            top: "20mm",
-            bottom: "20mm",
-            left: "15mm",
-            right: "15mm"
+        format: "A4",
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: {
+            top: "0mm",
+            bottom: "0mm",
+            left: "0mm",
+            right: "0mm"
         }
     })
     await browser.close()
@@ -92,22 +98,82 @@ async function generatePdfFormHtml(htmlContent) {
 async function generateResumePdf({ resume, selfDescription, jobDescription }) {
     const resumePdfSchema = z.object({
         html: z.string().describe("The HTML content of the resume which can be converted to PDF using any library like puppeteer")
-
     })
 
-    const prompt = `Generate resume for a candidate which the following details:
-        Resume = ${resume}
-        Self Description: ${selfDescription}
-        Job Description: ${jobDescription}
-        Rules:
-- Match score between 0 and 100.
-- Generate exactly 10 technical questions.
-- Generate exactly 5 behavioral questions.
-- Generate at least 5 skill gaps.
-- Generate a 30-day preparation plan.
-- Do NOT return empty arrays.
-- Every question must include question, intention and answer.
+    // Major change: generate a single-page, ATS-safe resume instead of interview-report content.
+    const prompt = `You are an expert ATS resume writer and senior software engineering resume editor.
+
+Create a professional, ATS-friendly, exactly one-page resume as clean HTML with inline CSS for Puppeteer PDF generation.
+
+Candidate Source Resume:
+${resume || "Not provided"}
+
+Candidate Self Description:
+${selfDescription || "Not provided"}
+
+Target Job Description:
+${jobDescription || "Not provided"}
+
+Output Contract:
 - Return valid JSON only.
+- JSON shape must be: { "html": "<!doctype html>..." }
+- The html string must contain a complete HTML document.
+
+Strict ATS Resume Requirements:
+- Exactly one A4 page.
+- White background.
+- Black text only.
+- No tables.
+- No graphics.
+- No icons.
+- No images.
+- No emojis.
+- No progress bars.
+- No columns that rely on tables.
+- No decorative colors.
+- No external fonts, scripts, stylesheets, or assets.
+- Use semantic HTML sections and inline CSS only.
+- Keep CSS simple and print-safe.
+- Use professional typography with Arial, Helvetica, or sans-serif.
+- Use compact spacing so the PDF fits one page.
+- Do not invent degrees, companies, dates, certifications, links, metrics, or contact details that are not present in the candidate data.
+- If a section has no reliable information, include the section heading with one concise line: "Not provided".
+- Tailor wording toward the target job description while staying truthful to the candidate data.
+
+Required Resume Sections in this exact order:
+1. Name
+2. Role
+3. Contact
+4. Summary
+5. Skills
+6. Projects
+7. Education
+8. Certifications
+9. Achievements
+
+Content Rules:
+- Name should be the candidate's real name if found; otherwise use "Candidate Name".
+- Role should be the strongest target role inferred from the resume and job description.
+- Contact should include available email, phone, location, LinkedIn, GitHub, portfolio, or "Not provided".
+- Summary should be 2-3 concise lines focused on role fit.
+- Skills should be grouped in short ATS-readable text lines, not visual chips.
+- Projects should include 2-3 strongest projects with project name, technologies, and impact bullets.
+- Education should be concise and factual.
+- Certifications should be concise and factual.
+- Achievements should be measurable when evidence exists, otherwise concise professional accomplishments from the provided content.
+
+HTML/CSS Requirements:
+- Include this page setup or equivalent inline CSS:
+  @page { size: A4; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #ffffff; color: #111111; }
+- Create a single .resume-page container sized width: 210mm; min-height: 297mm; max-height: 297mm; padding: 12mm 14mm; box-sizing: border-box; overflow: hidden.
+- Use font-size between 9px and 13px for body content.
+- Use h1 for name, h2 for section headings.
+- Section headings must be uppercase, simple, and separated by a thin black border-bottom.
+- Use bullet lists with plain text bullets only.
+- Keep bullets short, action-oriented, and ATS-readable.
+- Avoid long paragraphs.
+- Do not include markdown fences.
 `;
 
     const response = await ai.models.generateContent({
@@ -120,17 +186,13 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
     });
     console.log(response.text);
     const json = JSON.parse(response.text);
-    return json;
 
-    const jsonContent = JSON.parse(response.text)
-    const pdfBuffer = await generatePdfFormHtml(jsonContent.html)
-    return pdfBuffer
+    if (!json.html) {
+        throw new Error("AI did not return HTML content for the resume.");
+    }
+
+    const pdfBuffer = await generatePdfFormHtml(json.html);
+    return pdfBuffer;
 }
 
-
-
 module.exports = { generateInterviewReport, generateResumePdf }
-
-
-
-

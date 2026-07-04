@@ -8,7 +8,7 @@
     "dev": "npx nodemon server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Priyanshu",
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^2.10.0",

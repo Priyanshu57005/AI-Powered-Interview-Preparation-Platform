@@ -5,6 +5,16 @@ AI Interview Preparation Platform is a full-stack AI-powered interview preparati
 The platform generates personalized interview questions, identifies skill gaps, creates a preparation roadmap, and builds an ATS-friendly resume using Google's Gemini AI.
 
 ---
+## Live Demo
+
+Frontend (Netlify): https://ai-powered-interview-preparation.netlify.app/
+
+Backend (Render + Docker): https://ai-powered-interview-preparation-platform-ej3q.onrender.com/
+
+Dockerized Backend:
+The backend is containerized using Docker, ensuring a consistent development and production environment. The Docker image packages the Node.js application and its dependencies, making deployment portable, reproducible, and platform-independent.
+
+---
 
 ## Features
 

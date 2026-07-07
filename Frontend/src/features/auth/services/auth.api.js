@@ -1,8 +1,8 @@
 import axios from "axios"
 
 const api = axios.create({
-    baseURL: "http://localhost:3000",
-    withCredentials: true
+    baseURL: "https://ai-powered-interview-preparation-platform-ej3q.onrender.com/api",
+    withCredentials: true,
 })
 
 export async function register({ username, email, password }) {

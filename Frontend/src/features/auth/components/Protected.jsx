@@ -20,9 +20,7 @@ const Protected = ({children}) => {
                     <div className="loader-ring"></div>
                     <div className="loader-core"></div>
                 </div>
-
                 <h1>Preparing your workspace</h1>
-
                 <p>
                     Verifying your account and connecting to the AI interview engine.
                 </p>

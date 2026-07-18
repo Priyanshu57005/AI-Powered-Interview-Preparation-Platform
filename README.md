@@ -1,19 +1,85 @@
 # AI Interview Preparation Platform
 
-AI Interview Preparation Platform is a full-stack AI-powered interview preparation platform that helps candidates prepare for technical interviews by analyzing their resume and comparing it with a target job description.
+AI Interview Preparation Platform is a full-stack AI-powered interview preparation platform that helps candidates prepare for technical interviews by analyzing resumes against target job descriptions.
 
-The platform generates personalized interview questions, identifies skill gaps, creates a preparation roadmap, and builds an ATS-friendly resume using Google's Gemini AI.
+The platform leverages Google's Gemini AI to generate personalized interview questions, ATS match scores, skill gap analysis, personalized preparation roadmaps, and ATS-friendly resumes.
 
 ---
 
-## Features
+# Live Demo
+
+### Frontend (Netlify)
+
+https://ai-powered-interview-preparation.netlify.app/
+
+### Backend API (Render + Docker)
+
+https://ai-powered-interview-preparation-platform-ej3q.onrender.com/
+
+### Docker Hub
+
+https://hub.docker.com/r/priyanshudv/ai-interview-prep-backend
+
+---
+
+# Deployment Architecture
+
+```text
+                    User
+                      │
+                      ▼
+        React Frontend (Netlify)
+                      │
+             HTTPS REST API
+                      │
+                      ▼
+     Docker Container (Render)
+                      │
+           Node.js + Express API
+                      │
+                      ▼
+             MongoDB Atlas
+                      │
+                      ▼
+            Google Gemini AI
+```
+
+---
+
+# Docker
+
+The backend is fully containerized using Docker to ensure a consistent development and production environment.
+
+### Pull Image
+
+```bash
+docker pull priyanshudv/ai-interview-prep-backend:latest
+```
+
+### Run Container
+
+```bash
+docker run -p 3000:3000 --env-file .env priyanshudv/ai-interview-prep-backend:latest
+```
+
+### Benefits
+
+- Consistent runtime across environments
+- Portable and reproducible deployments
+- Eliminates environment-specific issues
+- Simplifies cloud deployment
+- Production-ready backend containerization
+
+---
+
+# Features
 
 - Secure JWT Authentication
 - Resume Upload (PDF)
 - Resume Parsing
-- AI-Powered Resume Analysis
+- AI Resume Analysis
 - Job Description Matching
-- Match Score Generation
+- ATS Match Score Generation
 - Technical Interview Questions
 - Behavioral Interview Questions
 - Skill Gap Analysis
@@ -25,265 +91,189 @@ The platform generates personalized interview questions, identifies skill gaps, 
 
 ---
 
-## Tech Stack
+# Tech Stack
 
-### Frontend
+## Frontend
 
 - React.js
 - React Router
 - Axios
-- SCSS
 - Context API
+- SCSS
 
-### Backend
+## Backend
 
 - Node.js
 - Express.js
 - MongoDB
 - Mongoose
+- JWT Authentication
+- REST APIs
 
-### AI
+## AI
 
 - Google Gemini 2.5 Flash
+- Zod
+- JSON Schema
+
+## Deployment
+
+- Docker
+- Render
+- Netlify
+- MongoDB Atlas
 
 ---
 
-## Project Structure
+# System Design Highlights
 
-```
+- Layered Backend Architecture (Routes → Controllers → Services → Database)
+- Stateless JWT Authentication using HTTP-only Cookies
+- RESTful API Design
+- AI Processing Pipeline
+- PDF Resume Parsing Pipeline
+- Structured AI Response Validation using Zod
+- ATS Resume Generation using Puppeteer
+- Dockerized Backend Deployment
+- Cloud Database using MongoDB Atlas
+
+---
+
+# Project Structure
+
+```text
 AI-ReS
 │
 ├── Frontend
 │   ├── src
 │   ├── public
-│   └── dist
+│   ├── dist
+│   └── package.json
 │
 └── Backend
     ├── src
+    │   ├── config
     │   ├── controllers
     │   ├── middleware
     │   ├── models
     │   ├── routes
     │   ├── services
-    │   └── config
+    │   └── utils
     │
+    ├── uploads
     ├── server.js
-    └── app.js
+    ├── package.json
+    └── Dockerfile
 ```
 
 ---
 
-## Backend Dependencies
+# Authentication Flow
 
-### @google/genai
-
-Used to communicate with Google's Gemini API.
-
-Responsibilities:
-
-- Resume Analysis
-- Job Description Matching
-- Interview Question Generation
-- ATS Resume HTML Generation
-
----
-
-### bcryptjs
-
-Used for password hashing before storing user credentials in MongoDB.
-
----
-
-### cookie-parser
-
-Parses authentication cookies sent by the browser.
-
-Used for JWT authentication.
-
----
-
-### cors
-
-Allows secure communication between the React frontend and Express backend.
-
-Configured with credentials support.
-
----
-
-### dotenv
-
-Loads environment variables from the `.env` file.
-
-Used for:
-
-- MongoDB URI
-- JWT Secret
-- Gemini API Key
-
----
-
-### express
-
-Main backend framework responsible for:
-
-- Routing
-- Middleware
-- API Endpoints
-- Request Handling
-
----
-
-### jsonwebtoken
-
-Implements JWT-based authentication.
-
-Used for:
-
-- Token Generation
-- Protected Routes
-- User Authentication
-
----
-
-### mongoose
-
-ODM used to communicate with MongoDB.
-
-Responsible for:
-
-- Database Models
-- Validation
-- CRUD Operations
-
----
-
-### multer
-
-Handles multipart/form-data requests.
-
-Used to upload user resumes before parsing.
-
----
-
-### nodemon
-
-Development dependency.
-
-Automatically restarts the backend server whenever files change.
-
----
-
-### pdf-parse
-
-Extracts text from uploaded PDF resumes.
-
-The extracted text is later sent to Gemini AI for analysis.
-
----
-
-### puppeteer
-
-Generates professional ATS-compatible PDF resumes from HTML templates created by Gemini.
-
----
-
-### zod
-
-Defines schemas for AI responses.
-
-Ensures Gemini always returns structured and validated JSON.
-
----
-
-### zod-to-json-schema
-
-Converts Zod schemas into JSON Schema so Gemini understands the expected response format.
-
----
-
-## Authentication Flow
-
-```
+```text
 User
-    │
-    ▼
+ │
+ ▼
 Register
-    │
-    ▼
+ │
+ ▼
 Password Hashing (bcrypt)
-    │
-    ▼
+ │
+ ▼
 MongoDB
-    │
-    ▼
+ │
+ ▼
 Login
-    │
-    ▼
+ │
+ ▼
 JWT Token
-    │
-    ▼
-HTTP Cookie
-    │
-    ▼
+ │
+ ▼
+HTTP-only Cookie
+ │
+ ▼
+Authentication Middleware
+ │
+ ▼
 Protected Routes
 ```
 
 ---
 
-## Interview Generation Flow
+# Interview Generation Flow
 
-```
-Upload Resume
-        │
-        ▼
+```text
+Resume Upload
+      │
+      ▼
 PDF Parsing
-        │
-        ▼
+      │
+      ▼
 Resume Text
-        │
-        ▼
+      │
+      ▼
 Job Description
-        │
-        ▼
+      │
+      ▼
 Google Gemini AI
-        │
-        ▼
+      │
+      ▼
 Structured Interview Report
-        │
-        ▼
+      │
+      ▼
 MongoDB
-        │
-        ▼
+      │
+      ▼
 Interview Dashboard
 ```
 
 ---
 
-## ATS Resume Generation Flow
+# ATS Resume Generation Flow
 
-```
+```text
 Resume Data
-       │
-       ▼
-Gemini AI
-       │
-       ▼
+      │
+      ▼
+Google Gemini AI
+      │
+      ▼
 HTML Resume
-       │
-       ▼
+      │
+      ▼
 Puppeteer
-       │
-       ▼
-PDF Resume
+      │
+      ▼
+ATS-Friendly PDF Resume
 ```
 
 ---
 
-## Environment Variables
+# Backend Dependencies
+
+| Package | Purpose |
+|----------|---------|
+| Express | REST API & Routing |
+| Mongoose | MongoDB ODM |
+| JWT | Authentication |
+| bcryptjs | Password Hashing |
+| cookie-parser | Cookie Parsing |
+| cors | Cross-Origin Requests |
+| multer | Resume Upload |
+| pdf-parse | PDF Text Extraction |
+| @google/genai | Gemini AI Integration |
+| zod | AI Response Validation |
+| zod-to-json-schema | JSON Schema Generation |
+| puppeteer | ATS PDF Resume Generation |
+| dotenv | Environment Variables |
+
+---
+
+# Environment Variables
 
 Create a `.env` file inside the Backend folder.
 
-```
+```env
 PORT=3000
 
 MONGODB_URI=your_mongodb_connection
@@ -295,25 +285,25 @@ GOOGLE_GENAI_API_KEY=your_api_key
 
 ---
 
-## Installation
+# Installation
 
-Clone the repository
+### Clone Repository
 
+```bash
+git clone https://github.com/Priyanshu57005/AI-Powered-Interview-Preparation-Platform.git
 ```
-git clone https://github.com/Priyanshu57005/AI-Powered-Interview-Preparation-Platform
-```
 
-Backend
+### Backend
 
-```
+```bash
 cd Backend
 npm install
 npm run dev
 ```
 
-Frontend
+### Frontend
 
-```
+```bash
 cd Frontend
 npm install
 npm run dev
@@ -321,14 +311,35 @@ npm run dev
 
 ---
 
-## Author
+# Future Improvements
+
+- OAuth Authentication
+- Mock Interview Video Calls
+- AI Voice Interview
+- Real-time Interview Analytics
+- Company-wise Interview Question Bank
+- Interview Performance Dashboard
+- Email Notifications
+- Interview Sharing
+- Docker Compose Support
+- CI/CD Pipeline using GitHub Actions
+
+---
+
+# Author
 
 **Priyanshu Gautam**
 
 B.Tech Information Technology
-SDE Fresher 
 
-GitHub: https://github.com/Priyanshu57005
-LinkedIn: https://linkedin.com/in/priyanshu-gautam-12b5a0298
+Aspiring Software Development Engineer (SDE)
+
+**GitHub**
+https://github.com/Priyanshu57005
+
+**LinkedIn**
+https://www.linkedin.com/in/priyanshu-gautam-12b5a0298
 
 ---
+
+⭐ If you found this project useful, consider giving it a star on GitHub.
